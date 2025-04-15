@@ -35,10 +35,9 @@ export default function MainMenuScreen() {
   };
 
   const handleHowToPlay = () => {
-    // Либо переходим на экран правил, либо открываем модалку
-    // router.push("/how-to-play");
-    console.log("Show how to play...");
+    router.push("/how-to-play");
   };
+
 
   return (
     // Фоновое изображение
