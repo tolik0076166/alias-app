@@ -27,7 +27,6 @@ export default function TeamSetupScreen() {
   const router = useRouter();
 
   const teams = useSelector((state: any) => state.game.teams);
-  
 
   const listRef = useRef<FlatList>(null);
 
@@ -74,10 +73,6 @@ export default function TeamSetupScreen() {
 
   const handleNext = () => {
     router.push("/round-intro");
-  };
-
-  const handleBack = () => {
-    router.back();
   };
 
   const renderTeamItem = ({ item, index }: { item: string; index: number }) => (
@@ -129,11 +124,7 @@ export default function TeamSetupScreen() {
             <Text style={styles.headerTitle}>Teams</Text>
           </View>
 
-          <View style={styles.headerSide}>
-            <TouchableOpacity style={styles.backIconButton} onPress={handleBack}>
-              <Feather name="chevron-left" size={28} color="#fff" />
-            </TouchableOpacity>
-          </View>
+          <View style={styles.headerSide} />
         </View>
 
         <View style={styles.listContainer}>
@@ -233,9 +224,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#fff",
     fontWeight: "bold",
-  },
-  backIconButton: {
-    padding: 5,
   },
   listContainer: {
     flex: 1,

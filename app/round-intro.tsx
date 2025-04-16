@@ -47,13 +47,13 @@ export default function RoundIntroScreen() {
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      router.back();
+      router.navigate("/teams");
     });
   };
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, gestureState) => {
-      return Platform.OS === 'android' && gestureState.dx > 20;
+      return gestureState.dx > 20; // работает и на Android и на iOS
     },
     onPanResponderMove: Animated.event(
       [null, { dx: translateX }],
@@ -84,7 +84,6 @@ export default function RoundIntroScreen() {
         >
           <View style={styles.notchSpacer} />
 
-          {/* Шапка */}
           <View style={styles.header}>
             <View style={styles.headerSide}>
               <TouchableOpacity style={styles.menuButton} onPress={handleMenu}>

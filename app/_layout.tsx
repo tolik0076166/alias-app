@@ -8,11 +8,30 @@ export default function RootLayout() {
     <Provider store={store}>
       <Stack
         screenOptions={{
-          headerShown: false,              // скрываем стандартный header
-          animation: "slide_from_right",  // анимация переходов
-          gestureEnabled: true,           // свайп назад
+          headerShown: false,
+          animation: "slide_from_right",
+          gestureEnabled: true,
         }}
-      />
+      >
+        {/* Отключаем свайп и анимацию для главного экрана */}
+        <Stack.Screen
+          name="index"
+          options={{
+            gestureEnabled: false,
+            animation: "none",
+            headerShown: false,
+          }}
+        />
+        {/* И для экрана с командами */}
+        <Stack.Screen
+          name="teams"
+          options={{
+            gestureEnabled: false,
+            animation: "none",
+            headerShown: false,
+          }}
+        />
+      </Stack>
     </Provider>
   );
 }

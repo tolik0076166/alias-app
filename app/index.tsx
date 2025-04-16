@@ -34,9 +34,12 @@ export default function MainMenuScreen() {
     }
   };
 
-  const handleHowToPlay = () => {
-    router.push("/how-to-play");
-  };
+
+
+const handleHowToPlay = () => {
+  router.push("/how-to-play");
+};
+
 
 
   return (

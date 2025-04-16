@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
-import { endTurn, setLastRoute } from "../store/gameSlice";
+import { endTurn, goBackTurn, setLastRoute } from "../store/gameSlice";
 import { Feather } from "@expo/vector-icons";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -29,6 +29,7 @@ export default function GameScreen() {
   const currentTeamIndex = useSelector((state: any) => state.game.currentTeamIndex);
   const currentWordIndex = useSelector((state: any) => state.game.currentWordIndex);
   const roundTurns = useSelector((state: any) => state.game.roundTurns);
+  const history = useSelector((state: any) => state.game.history);
 
   const currentTeam = teams[currentTeamIndex] || "No teams";
   const currentWord = words[currentWordIndex] || "Слова закончились";
@@ -53,19 +54,19 @@ export default function GameScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (history.length === 0) return;
+
+    const isFirstTurn = history.length === 1 && history[0].teamIndex === 0;
+    if (isFirstTurn) return;
+
+    dispatch(goBackTurn());
+    setIsWordVisible(true);
+  };
+
   const handleMenu = () => {
     dispatch(setLastRoute("/game-screen"));
     router.push("/");
-  };
-
-  const handleBack = () => {
-    Animated.timing(translateX, {
-      toValue: SCREEN_WIDTH,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      router.back();
-    });
   };
 
   const toggleWordVisibility = () => {
@@ -81,6 +82,11 @@ export default function GameScreen() {
     onPanResponderRelease: (_, gestureState) => {
       if (gestureState.dx > 50) {
         handleBack();
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }).start();
       } else {
         Animated.spring(translateX, {
           toValue: 0,
@@ -90,6 +96,9 @@ export default function GameScreen() {
     },
   });
 
+  const isFirstTeamFirstWord =
+    currentTeamIndex === 0 && currentWordIndex === 0;
+
   return (
     <ImageBackground
       source={require("../assets/images/imege6.jpg")}
@@ -98,7 +107,7 @@ export default function GameScreen() {
     >
       <Animated.View
         style={[styles.overlay, { transform: [{ translateX }] }]}
-        {...panResponder.panHandlers}
+        {...(!isFirstTeamFirstWord ? panResponder.panHandlers : {})}
       >
         <View style={styles.notchSpacer} />
 
@@ -114,9 +123,11 @@ export default function GameScreen() {
           </View>
 
           <View style={styles.headerSide}>
-            <TouchableOpacity style={styles.backIconButton} onPress={handleBack}>
-              <Feather name="chevron-left" size={28} color="#fff" />
-            </TouchableOpacity>
+            {!isFirstTeamFirstWord && (
+              <TouchableOpacity style={styles.backIconButton} onPress={handleBack}>
+                <Feather name="chevron-left" size={28} color="#fff" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 

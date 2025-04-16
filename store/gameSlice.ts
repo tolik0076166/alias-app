@@ -1,13 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-// Две команды по умолчанию
 const defaultTeams = ["Team 1", "Team 2"];
-// Счёт по умолчанию (для двух команд)
 const defaultScores = [0, 0];
-// Пример списка слов
 const defaultWords = ["стюардеса", "слон", "кофеварка", "программист"];
 
-// Описываем интерфейс состояния (если хотите строгий TS)
 interface GameState {
   teams: string[];
   scores: number[];
@@ -16,46 +12,36 @@ interface GameState {
   currentWordIndex: number;
   roundTurns: number;
   lastRoute: string | null;
-  // Новое поле для логики «Round X»
   roundNumber: number;
+  history: { teamIndex: number; wordIndex: number }[];
 }
 
 const initialState: GameState = {
   teams: [...defaultTeams],
   scores: [...defaultScores],
   words: [...defaultWords],
-
   currentTeamIndex: 0,
   currentWordIndex: 0,
   roundTurns: 0,
   lastRoute: null,
-
-  // Начинаем с Round 1
   roundNumber: 1,
+  history: [],
 };
 
 export const gameSlice = createSlice({
   name: "game",
   initialState,
   reducers: {
-    // Добавить новую команду
     addTeam(state, action: PayloadAction<string>) {
       state.teams.push(action.payload);
-      state.scores.push(0); // Для новой команды
+      state.scores.push(0);
     },
-
-    // Переименовать команду
-    updateTeam(
-      state,
-      action: PayloadAction<{ index: number; newName: string }>
-    ) {
+    updateTeam(state, action: PayloadAction<{ index: number; newName: string }>) {
       const { index, newName } = action.payload;
       if (index >= 0 && index < state.teams.length) {
         state.teams[index] = newName;
       }
     },
-
-    // Удалить команду
     removeTeam(state, action: PayloadAction<number>) {
       const index = action.payload;
       if (index >= 0 && index < state.teams.length) {
@@ -63,53 +49,47 @@ export const gameSlice = createSlice({
         state.scores.splice(index, 1);
       }
     },
-
-    // Завершение хода
     endTurn(state) {
+      state.history.push({
+        teamIndex: state.currentTeamIndex,
+        wordIndex: state.currentWordIndex,
+      });
       state.roundTurns += 1;
-      // Переходим к следующей команде по кругу
-      state.currentTeamIndex =
-        (state.currentTeamIndex + 1) % state.teams.length;
-      // Следующее слово
+      state.currentTeamIndex = (state.currentTeamIndex + 1) % state.teams.length;
       state.currentWordIndex += 1;
     },
-
-    // Присудить очко (когда вручную выбираем команду-победителя)
+    goBackTurn(state) {
+      if (state.history.length === 0) return;
+      const lastTurn = state.history.pop();
+      if (lastTurn) {
+        state.currentTeamIndex = lastTurn.teamIndex;
+        state.currentWordIndex = lastTurn.wordIndex;
+        state.roundTurns = Math.max(0, state.roundTurns - 1);
+      }
+    },
     awardPoint(state, action: PayloadAction<number>) {
       const winnerIndex = action.payload;
       if (winnerIndex >= 0 && winnerIndex < state.scores.length) {
         state.scores[winnerIndex] += 1;
       }
     },
-
-    // Сброс "раунда"
     resetRound(state) {
       state.roundTurns = 0;
     },
-
-    // Переходим к следующему раунду (roundNumber++)
     nextRound(state) {
       state.roundNumber += 1;
-      // Можно обнулить roundTurns или positions, по логике
-      // state.roundTurns = 0;
     },
-
-    // Полный сброс игры
     resetGame(state) {
       state.teams = [...defaultTeams];
       state.scores = [...defaultScores];
       state.words = [...defaultWords];
-
       state.currentTeamIndex = 0;
       state.currentWordIndex = 0;
       state.roundTurns = 0;
       state.lastRoute = null;
-
-      // Раунд снова 1
       state.roundNumber = 1;
+      state.history = [];
     },
-
-    // Устанавливаем маршрут для "Continue"
     setLastRoute(state, action: PayloadAction<string | null>) {
       state.lastRoute = action.payload;
     },
@@ -121,6 +101,7 @@ export const {
   updateTeam,
   removeTeam,
   endTurn,
+  goBackTurn,
   awardPoint,
   resetRound,
   nextRound,
