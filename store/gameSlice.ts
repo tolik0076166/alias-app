@@ -4,6 +4,11 @@ const defaultTeams = ["Team 1", "Team 2"];
 const defaultScores = [0, 0];
 const defaultWords = ["стюардеса", "слон", "кофеварка", "программист"];
 
+interface Turn {
+  teamIndex: number;
+  wordIndex: number;
+}
+
 interface GameState {
   teams: string[];
   scores: number[];
@@ -13,7 +18,7 @@ interface GameState {
   roundTurns: number;
   lastRoute: string | null;
   roundNumber: number;
-  history: { teamIndex: number; wordIndex: number }[];
+  history: Turn[];
 }
 
 const initialState: GameState = {
@@ -60,12 +65,13 @@ export const gameSlice = createSlice({
     },
     goBackTurn(state) {
       if (state.history.length === 0) return;
-      const lastTurn = state.history.pop();
-      if (lastTurn) {
-        state.currentTeamIndex = lastTurn.teamIndex;
-        state.currentWordIndex = lastTurn.wordIndex;
-        state.roundTurns = Math.max(0, state.roundTurns - 1);
-      }
+
+      const last = state.history.pop();
+      if (!last) return;
+
+      state.currentTeamIndex = last.teamIndex;
+      state.currentWordIndex = last.wordIndex;
+      state.roundTurns = state.history.length;
     },
     awardPoint(state, action: PayloadAction<number>) {
       const winnerIndex = action.payload;

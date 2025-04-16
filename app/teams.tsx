@@ -8,13 +8,11 @@ import {
   ImageBackground,
   Modal,
   TextInput,
-  Alert,
   Platform,
   StatusBar,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "expo-router";
-import { Feather } from '@expo/vector-icons';
+import { useNavigation } from "@react-navigation/native"; // ✅ navigation
 import {
   addTeam,
   updateTeam,
@@ -24,10 +22,9 @@ import {
 
 export default function TeamSetupScreen() {
   const dispatch = useDispatch();
-  const router = useRouter();
+  const navigation = useNavigation<any>(); // ✅ вместо router
 
   const teams = useSelector((state: any) => state.game.teams);
-
   const listRef = useRef<FlatList>(null);
 
   const [isRenameModalVisible, setRenameModalVisible] = useState(false);
@@ -68,38 +65,26 @@ export default function TeamSetupScreen() {
 
   const handleMenu = () => {
     dispatch(setLastRoute("/teams"));
-    router.push("/");
+    navigation.navigate("index"); // или router.push("/") если хочешь
   };
 
   const handleNext = () => {
-    router.push("/round-intro");
+    navigation.reset({
+      index: 1,
+      routes: [
+        { name: "teams" },
+        { name: "round-intro" },
+      ],
+    });
   };
 
   const renderTeamItem = ({ item, index }: { item: string; index: number }) => (
     <View style={styles.teamItem}>
-      <TouchableOpacity
-        style={styles.teamName}
-        onPress={() => handleStartRename(index)}
-      >
+      <TouchableOpacity style={styles.teamName} onPress={() => handleStartRename(index)}>
         <Text style={styles.teamNameText}>{item}</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.deleteBtn}
-        onPress={() => handleRemoveTeam(index)}
-      >
+      <TouchableOpacity style={styles.deleteBtn} onPress={() => handleRemoveTeam(index)}>
         <Text style={styles.deleteBtnText}>X</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderListFooter = () => (
-    <View style={styles.addButtonWrapper}>
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={handleAddTeam}
-        activeOpacity={1}
-      >
-        <Text style={styles.addButtonText}>Add Team</Text>
       </TouchableOpacity>
     </View>
   );
@@ -134,7 +119,17 @@ export default function TeamSetupScreen() {
             data={teams}
             keyExtractor={(_, index) => index.toString()}
             renderItem={renderTeamItem}
-            ListFooterComponent={renderListFooter}
+            ListFooterComponent={
+              <View style={styles.addButtonWrapper}>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={handleAddTeam}
+                  activeOpacity={1}
+                >
+                  <Text style={styles.addButtonText}>Add Team</Text>
+                </TouchableOpacity>
+              </View>
+            }
             onContentSizeChange={() => {
               listRef.current?.scrollToEnd({ animated: true });
             }}
@@ -157,10 +152,7 @@ export default function TeamSetupScreen() {
                 placeholderTextColor="#999"
               />
               <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={styles.modalButton}
-                  onPress={handleCancelRename}
-                >
+                <TouchableOpacity style={styles.modalButton} onPress={handleCancelRename}>
                   <Text style={styles.modalButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -189,8 +181,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.4)",
   },
   notchSpacer: {
-    height: Platform.OS === 'android' ? StatusBar.currentHeight : 50,
-    backgroundColor: 'transparent',
+    height: Platform.OS === "android" ? StatusBar.currentHeight : 50,
+    backgroundColor: "transparent",
   },
   header: {
     height: 56,

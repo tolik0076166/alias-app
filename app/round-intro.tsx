@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "expo-router";
+import { useRouter, Stack } from "expo-router";
 import { setLastRoute } from "../store/gameSlice";
 import { Feather } from '@expo/vector-icons';
 
@@ -41,27 +41,24 @@ export default function RoundIntroScreen() {
     router.push("/game-screen");
   };
 
-  const handleBack = () => {
+  const handleBackToTeams = () => {
     Animated.timing(translateX, {
       toValue: SCREEN_WIDTH,
-      duration: 300,
+      duration: 250,
       useNativeDriver: true,
     }).start(() => {
-      router.navigate("/teams");
+      router.replace("/teams");
     });
   };
 
   const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_, gestureState) => {
-      return gestureState.dx > 20; // работает и на Android и на iOS
-    },
-    onPanResponderMove: Animated.event(
-      [null, { dx: translateX }],
-      { useNativeDriver: false }
-    ),
+    onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dx > 20,
+    onPanResponderMove: Animated.event([null, { dx: translateX }], {
+      useNativeDriver: false,
+    }),
     onPanResponderRelease: (_, gestureState) => {
       if (gestureState.dx > 50) {
-        handleBack();
+        handleBackToTeams();
       } else {
         Animated.spring(translateX, {
           toValue: 0,
@@ -72,80 +69,78 @@ export default function RoundIntroScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={require("../assets/images/imege6.jpg")}
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <Animated.View
-          style={[styles.overlay, { transform: [{ translateX }] }]}
-          {...panResponder.panHandlers}
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+          gestureEnabled: false, // ❗ Отключает системный свайп назад
+        }}
+      />
+      <View style={styles.container}>
+        <ImageBackground
+          source={require("../assets/images/imege6.jpg")}
+          style={styles.background}
+          resizeMode="cover"
         >
-          <View style={styles.notchSpacer} />
+          <Animated.View
+            style={[styles.overlay, { transform: [{ translateX }] }]}
+            {...panResponder.panHandlers}
+          >
+            <View style={styles.notchSpacer} />
+            <View style={styles.header}>
+              <View style={styles.headerSide}>
+                <TouchableOpacity style={styles.menuButton} onPress={handleMenu}>
+                  <Text style={styles.menuButtonText}>Menu</Text>
+                </TouchableOpacity>
+              </View>
 
-          <View style={styles.header}>
-            <View style={styles.headerSide}>
-              <TouchableOpacity style={styles.menuButton} onPress={handleMenu}>
-                <Text style={styles.menuButtonText}>Menu</Text>
-              </TouchableOpacity>
+              <View style={styles.headerCenter}>
+                <Text style={styles.headerTitle}>TEAM SCORES</Text>
+              </View>
+
+              <View style={styles.headerSide}>
+                <TouchableOpacity style={styles.backIconButton} onPress={handleBackToTeams}>
+                  <Feather name="chevron-left" size={28} color="#fff" />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={styles.headerCenter}>
-              <Text style={styles.headerTitle}>TEAM SCORES</Text>
+            <View style={styles.listContainer}>
+              <FlatList
+                ref={listRef}
+                style={styles.teamList}
+                data={teams}
+                keyExtractor={(_, i) => i.toString()}
+                renderItem={({ item, index }) => (
+                  <View style={styles.scoreItem}>
+                    <Text style={styles.teamName}>{item}</Text>
+                    <Text style={styles.teamPoints}>{scores[index] || 0}</Text>
+                  </View>
+                )}
+                showsVerticalScrollIndicator={false}
+              />
             </View>
 
-            <View style={styles.headerSide}>
-              <TouchableOpacity style={styles.backIconButton} onPress={handleBack}>
-                <Feather name="chevron-left" size={28} color="#fff" />
-              </TouchableOpacity>
+            <View style={styles.roundInfo}>
+              <Text style={styles.roundText}>Round {roundNumber}</Text>
+              <Text style={styles.subText}>get ready to play</Text>
+              <Text style={styles.currentTeam}>{currentTeam}</Text>
             </View>
-          </View>
 
-          <View style={styles.listContainer}>
-            <FlatList
-              ref={listRef}
-              style={styles.teamList}
-              data={teams}
-              keyExtractor={(_, i) => i.toString()}
-              renderItem={({ item, index }) => (
-                <View style={styles.scoreItem}>
-                  <Text style={styles.teamName}>{item}</Text>
-                  <Text style={styles.teamPoints}>{scores[index] || 0}</Text>
-                </View>
-              )}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-
-          <View style={styles.roundInfo}>
-            <Text style={styles.roundText}>Round {roundNumber}</Text>
-            <Text style={styles.subText}>get ready to play</Text>
-            <Text style={styles.currentTeam}>{currentTeam}</Text>
-          </View>
-
-          <TouchableOpacity style={styles.letsGoBtn} onPress={handleLetsGo}>
-            <Text style={styles.letsGoBtnText}>Let’s go!</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </ImageBackground>
-    </View>
+            <TouchableOpacity style={styles.letsGoBtn} onPress={handleLetsGo}>
+              <Text style={styles.letsGoBtnText}>Let’s go!</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </ImageBackground>
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  background: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
+  container: { flex: 1 },
+  background: { flex: 1, width: "100%", height: "100%" },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
   notchSpacer: {
     height: Platform.OS === 'android' ? StatusBar.currentHeight : 50,
     backgroundColor: 'transparent',
@@ -169,10 +164,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  menuButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
+  menuButton: { paddingHorizontal: 10, paddingVertical: 5 },
   menuButtonText: {
     color: "#fff",
     fontWeight: "bold",
@@ -183,9 +175,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  backIconButton: {
-    padding: 5,
-  },
+  backIconButton: { padding: 5 },
   listContainer: {
     maxHeight: "50%",
     backgroundColor: "rgba(255,255,255,0.2)",
@@ -193,22 +183,14 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginHorizontal: 10,
   },
-  teamList: {
-    flexGrow: 0,
-  },
+  teamList: { flexGrow: 0 },
   scoreItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     padding: 10,
   },
-  teamName: {
-    fontSize: 18,
-    color: "#fff",
-  },
-  teamPoints: {
-    fontSize: 16,
-    color: "#fff",
-  },
+  teamName: { fontSize: 18, color: "#fff" },
+  teamPoints: { fontSize: 16, color: "#fff" },
   roundInfo: {
     flex: 1,
     justifyContent: "center",

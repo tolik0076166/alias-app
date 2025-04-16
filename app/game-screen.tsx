@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,11 @@ import {
   Image,
   Platform,
   StatusBar,
-  PanResponder,
-  Animated,
-  Dimensions,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { endTurn, goBackTurn, setLastRoute } from "../store/gameSlice";
 import { Feather } from "@expo/vector-icons";
-
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const prompts = ["Покажи", "Расскажи"];
 
 export default function GameScreen() {
   const dispatch = useDispatch();
@@ -37,9 +31,8 @@ export default function GameScreen() {
   const [isWordVisible, setIsWordVisible] = useState(true);
   const [currentPrompt, setCurrentPrompt] = useState("Покажи");
 
-  const translateX = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
+    const prompts = ["Покажи", "Расскажи"];
     const newPrompt = prompts[Math.floor(Math.random() * prompts.length)];
     setCurrentPrompt(newPrompt);
   }, [currentWordIndex]);
@@ -56,10 +49,6 @@ export default function GameScreen() {
 
   const handleBack = () => {
     if (history.length === 0) return;
-
-    const isFirstTurn = history.length === 1 && history[0].teamIndex === 0;
-    if (isFirstTurn) return;
-
     dispatch(goBackTurn());
     setIsWordVisible(true);
   };
@@ -73,31 +62,7 @@ export default function GameScreen() {
     setIsWordVisible(!isWordVisible);
   };
 
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_, gestureState) =>
-      Platform.OS === "android" && gestureState.dx > 20,
-    onPanResponderMove: Animated.event([null, { dx: translateX }], {
-      useNativeDriver: false,
-    }),
-    onPanResponderRelease: (_, gestureState) => {
-      if (gestureState.dx > 50) {
-        handleBack();
-        Animated.timing(translateX, {
-          toValue: 0,
-          duration: 150,
-          useNativeDriver: true,
-        }).start();
-      } else {
-        Animated.spring(translateX, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
-      }
-    },
-  });
-
-  const isFirstTeamFirstWord =
-    currentTeamIndex === 0 && currentWordIndex === 0;
+  const isFirstTurn = history.length === 0;
 
   return (
     <ImageBackground
@@ -105,10 +70,7 @@ export default function GameScreen() {
       style={styles.background}
       resizeMode="cover"
     >
-      <Animated.View
-        style={[styles.overlay, { transform: [{ translateX }] }]}
-        {...(!isFirstTeamFirstWord ? panResponder.panHandlers : {})}
-      >
+      <View style={styles.overlay}>
         <View style={styles.notchSpacer} />
 
         <View style={styles.header}>
@@ -123,7 +85,7 @@ export default function GameScreen() {
           </View>
 
           <View style={styles.headerSide}>
-            {!isFirstTeamFirstWord && (
+            {!isFirstTurn && (
               <TouchableOpacity style={styles.backIconButton} onPress={handleBack}>
                 <Feather name="chevron-left" size={28} color="#fff" />
               </TouchableOpacity>
@@ -151,7 +113,7 @@ export default function GameScreen() {
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     </ImageBackground>
   );
 }

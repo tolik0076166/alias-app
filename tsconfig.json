@@ -1,20 +1,16 @@
 {
-  // При необходимости сохраняем настройки из expo/tsconfig.base
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    // Добавляем "baseUrl": "."
     "baseUrl": ".",
     "paths": {
-      // Говорим, что "@/*" соответствует "./*"
-      // То есть "@/..." = "./..."
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "**/*.tsx"
   ]
 }
