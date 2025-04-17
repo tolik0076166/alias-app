@@ -34,6 +34,7 @@ export default function ScoreAwardScreen() {
 
   const [selectedTeamIndex, setSelectedTeamIndex] = useState<number | null>(null);
   const listRef = useRef<FlatList>(null);
+  const [backHandled, setBackHandled] = useState(false);
 
   const translateX = useRef(new Animated.Value(0)).current;
 
@@ -54,23 +55,23 @@ export default function ScoreAwardScreen() {
   };
 
   const handleBack = () => {
+    if (backHandled) return;
+    setBackHandled(true);
+
     Animated.timing(translateX, {
       toValue: SCREEN_WIDTH,
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      router.back();
+      router.replace("/game-screen?restore=true");
     });
   };
 
   const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_, gestureState) => {
-      return Platform.OS === 'android' && gestureState.dx > 20;
-    },
-    onPanResponderMove: Animated.event(
-      [null, { dx: translateX }],
-      { useNativeDriver: false }
-    ),
+    onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dx > 20,
+    onPanResponderMove: Animated.event([null, { dx: translateX }], {
+      useNativeDriver: false,
+    }),
     onPanResponderRelease: (_, gestureState) => {
       if (gestureState.dx > 50) {
         handleBack();
@@ -103,8 +104,10 @@ export default function ScoreAwardScreen() {
       style={styles.background}
       resizeMode="cover"
     >
-      <Animated.View style={[styles.overlay, { transform: [{ translateX }] }]} {...panResponder.panHandlers}>
-
+      <Animated.View
+        style={[styles.overlay, { transform: [{ translateX }] }]}
+        {...panResponder.panHandlers}
+      >
         <View style={styles.notchSpacer} />
 
         <View style={styles.header}>

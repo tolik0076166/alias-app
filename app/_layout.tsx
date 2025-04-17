@@ -13,7 +13,6 @@ export default function RootLayout() {
           gestureEnabled: true,
         }}
       >
-        {/* Отключаем свайп и анимацию для главного экрана */}
         <Stack.Screen
           name="index"
           options={{
@@ -22,12 +21,19 @@ export default function RootLayout() {
             headerShown: false,
           }}
         />
-        {/* И для экрана с командами */}
         <Stack.Screen
           name="teams"
           options={{
             gestureEnabled: false,
             animation: "none",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="game-screen"
+          options={{
+            gestureEnabled: false, // ← отключаем свайп
+            animation: "slide_from_right",
             headerShown: false,
           }}
         />

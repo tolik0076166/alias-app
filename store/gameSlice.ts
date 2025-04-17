@@ -55,23 +55,30 @@ export const gameSlice = createSlice({
       }
     },
     endTurn(state) {
-      state.history.push({
-        teamIndex: state.currentTeamIndex,
-        wordIndex: state.currentWordIndex,
-      });
+      const isFirstTurn = state.currentTeamIndex === 0 && state.currentWordIndex === 0;
+      if (!isFirstTurn) {
+        state.history.push({
+          teamIndex: state.currentTeamIndex,
+          wordIndex: state.currentWordIndex,
+        });
+      }
       state.roundTurns += 1;
       state.currentTeamIndex = (state.currentTeamIndex + 1) % state.teams.length;
       state.currentWordIndex += 1;
     },
     goBackTurn(state) {
-      if (state.history.length === 0) return;
-
       const last = state.history.pop();
       if (!last) return;
-
       state.currentTeamIndex = last.teamIndex;
       state.currentWordIndex = last.wordIndex;
-      state.roundTurns = state.history.length;
+      state.roundTurns = Math.max(0, state.history.length);
+    },
+    setTurn(state, action: PayloadAction<Turn>) {
+      state.currentTeamIndex = action.payload.teamIndex;
+      state.currentWordIndex = action.payload.wordIndex;
+    },
+    setHistory(state, action: PayloadAction<Turn[]>) {
+      state.history = action.payload;
     },
     awardPoint(state, action: PayloadAction<number>) {
       const winnerIndex = action.payload;
@@ -113,6 +120,8 @@ export const {
   nextRound,
   resetGame,
   setLastRoute,
+  setTurn,
+  setHistory,
 } = gameSlice.actions;
 
 export default gameSlice.reducer;
