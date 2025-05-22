@@ -1,0 +1,94 @@
+{
+    "menu": {
+      "title": "Alias",
+      "continue": "Continue",
+      "newGame": "New Game",
+      "howToPlay": "How to play"
+    },
+    "howToPlay": {
+      "title": "How to play",
+      "goal": "Goal of the game"
+    },
+    "teams": {
+    "title":       "Teams",
+    "menu":        "Menu",
+    "add":         "Add Team",
+    "next":        "Next",
+    "renameTitle": "Rename team",
+    "newNamePh":   "New team name",
+    "defaultName": "Team %{num}"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save":   "Save"
+  },
+  "roundIntro": {
+    "menu":        "Menu",
+    "title":       "TEAM SCORES",
+    "round":       "Round %{num}",
+    "subtitle":    "Get ready to play",
+    "letsGo":      "Let’s go!"
+  },
+  "game": {
+    "menu":    "Menu",
+    "next":    "Next",
+    "prompt": {
+      "show":  "Show",
+      "tell":  "Tell"
+    },
+    "noTeams": "No teams",
+    "noWords": "No more words"
+  },
+  "scoreAward": {
+    "menu":    "Menu",
+    "header":  "Choose the winner",
+    "question":"Which team gets the point?",
+    "award":   "Award point",
+    "errorT":  "Error",
+    "errorMsg":"Please select a team first!",
+    "points":  "%{p} pts"
+  },
+  "howToPlay": {
+    "title":      "How to play",
+    "subtitle":   "A thrilling party game for friends!",
+    "goal":       "Goal:",
+    "goalText":   "Explain a word or phrase with words or gestures so that others guess it.",
+    "modes":      "Game modes:",
+    "tell":       "Tell — explain the word with words.",
+    "show":       "Show — act the word with gestures.",
+    "forbidden":  "Forbidden:",
+    "forTell":    "For Tell:",
+    "forShow":    "For Show:",
+    "tellRules": [
+      "Use parts or forms of the word.",
+      "Translate it into another language.",
+      "Name the first letter or number of letters."
+    ],
+    "showRules": [
+      "Speak or make sounds.",
+      "Write in the air or on surfaces.",
+      "Use objects."
+    ],
+    "allowed":    "Allowed:",
+    "allowedTell":"For Tell:",
+    "allowedShow":"For Show:",
+    "tellAllowed":[
+      "Give synonyms, describe functions or situations.",
+      "Give real‑life examples.",
+      "Explain the word with antonyms."
+    ],
+    "showAllowed":[
+      "Use hands, facial expressions, body movements.",
+      "Conditionally split the word into parts.",
+      "Give gesture hints (e.g. “sounds like…”)."
+    ],
+    "round":      "Round flow:",
+    "roundText":  "After all tasks, players vote who did best. Winner gets 1 point.",
+    "win":        "How to win:",
+    "winText":    "The player with the most points after all rounds wins.",
+    "players":    "Number of players:",
+    "playersText":"2 or more.",
+    "back":       "Back"
+  }
+  }
+  

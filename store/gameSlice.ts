@@ -1,13 +1,20 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const defaultTeams = ["Team 1", "Team 2"];
-const defaultScores = [0, 0];
-const defaultWords = ["стюардеса", "слон", "кофеварка", "программист"];
+/* ─────────────────────────── external data ───────────────────── */
+// 2 JSON‑файли із базовими словами
+import ukWords from "../assets/data/words_ua.json";  // український список
+import enWords from "../assets/data/words_en.json";  // англійський список
+// утиліта Fisher‑Yates для рівномірного перемішування
+import { shuffle } from "../utils/shuffle";
 
-interface Turn {
-  teamIndex: number;
-  wordIndex: number;
-}
+/* ─────────────────────────── defaults ─────────────────────────── */
+const defaultTeams  = ["Team 1", "Team 2"];
+const defaultScores = [0, 0];
+// за замовчуванням стартуємо з українського набору
+const defaultWords  = shuffle(ukWords);
+
+/* ─────────────────────────── types ────────────────────────────── */
+interface Turn { teamIndex: number; wordIndex: number; }
 
 interface GameState {
   teams: string[];
@@ -16,53 +23,70 @@ interface GameState {
   currentTeamIndex: number;
   currentWordIndex: number;
   roundTurns: number;
-  lastRoute: string | null;
   roundNumber: number;
+  lastRoute: string | null;
   history: Turn[];
+  lastAwardTeamIndex: number | null;   // щоб можна було «Undo award»
 }
 
+/* ─────────────────────────── initial ──────────────────────────── */
 const initialState: GameState = {
   teams: [...defaultTeams],
   scores: [...defaultScores],
   words: [...defaultWords],
+
   currentTeamIndex: 0,
   currentWordIndex: 0,
+
   roundTurns: 0,
-  lastRoute: null,
   roundNumber: 1,
+
+  lastRoute: null,
   history: [],
+
+  lastAwardTeamIndex: null,
 };
 
+/* ─────────────────────────── slice ────────────────────────────── */
 export const gameSlice = createSlice({
   name: "game",
   initialState,
   reducers: {
-    addTeam(state, action: PayloadAction<string>) {
-      state.teams.push(action.payload);
+    /* ==== підвантаження / зміна набору слів ==== */
+    loadWords(state, { payload }: PayloadAction<string[]>) {
+      state.words = shuffle(payload);
+      // скидаємо прогрес, бо починаємо нову гру
+      state.currentTeamIndex = 0;
+      state.currentWordIndex = 0;
+      state.roundTurns       = 0;
+      state.roundNumber      = 1;
+      state.history          = [];
+    },
+
+    /* ==== керування командами ==== */
+    addTeam(state, { payload }: PayloadAction<string>) {
+      state.teams.push(payload);
       state.scores.push(0);
     },
-    updateTeam(state, action: PayloadAction<{ index: number; newName: string }>) {
-      const { index, newName } = action.payload;
-      if (index >= 0 && index < state.teams.length) {
-        state.teams[index] = newName;
+    updateTeam(state, { payload }: PayloadAction<{ index: number; newName: string }>) {
+      const { index, newName } = payload;
+      if (index >= 0 && index < state.teams.length) state.teams[index] = newName;
+    },
+    removeTeam(state, { payload }: PayloadAction<number>) {
+      if (payload >= 0 && payload < state.teams.length) {
+        state.teams.splice(payload, 1);
+        state.scores.splice(payload, 1);
       }
     },
-    removeTeam(state, action: PayloadAction<number>) {
-      const index = action.payload;
-      if (index >= 0 && index < state.teams.length) {
-        state.teams.splice(index, 1);
-        state.scores.splice(index, 1);
-      }
-    },
+
+    /* ==== хід уперед / назад ==== */
     endTurn(state) {
-      const isFirstTurn = state.currentTeamIndex === 0 && state.currentWordIndex === 0;
-      if (!isFirstTurn) {
-        state.history.push({
-          teamIndex: state.currentTeamIndex,
-          wordIndex: state.currentWordIndex,
-        });
-      }
-      state.roundTurns += 1;
+      state.history.push({
+        teamIndex: state.currentTeamIndex,
+        wordIndex: state.currentWordIndex,
+      });
+
+      state.roundTurns      += 1;
       state.currentTeamIndex = (state.currentTeamIndex + 1) % state.teams.length;
       state.currentWordIndex += 1;
     },
@@ -71,57 +95,58 @@ export const gameSlice = createSlice({
       if (!last) return;
       state.currentTeamIndex = last.teamIndex;
       state.currentWordIndex = last.wordIndex;
-      state.roundTurns = Math.max(0, state.history.length);
+      state.roundTurns       = state.history.length;
     },
-    setTurn(state, action: PayloadAction<Turn>) {
-      state.currentTeamIndex = action.payload.teamIndex;
-      state.currentWordIndex = action.payload.wordIndex;
-    },
-    setHistory(state, action: PayloadAction<Turn[]>) {
-      state.history = action.payload;
-    },
-    awardPoint(state, action: PayloadAction<number>) {
-      const winnerIndex = action.payload;
-      if (winnerIndex >= 0 && winnerIndex < state.scores.length) {
-        state.scores[winnerIndex] += 1;
+
+    /* ==== очки ==== */
+    awardPoint(state, { payload }: PayloadAction<number>) {
+      if (payload >= 0 && payload < state.scores.length) {
+        state.scores[payload] += 1;
+        state.lastAwardTeamIndex = payload;
       }
     },
-    resetRound(state) {
-      state.roundTurns = 0;
+    undoLastAward(state) {
+      const i = state.lastAwardTeamIndex;
+      if (i === null || i < 0 || i >= state.scores.length || state.scores[i] === 0) return;
+
+      state.scores[i]        -= 1;
+      state.lastAwardTeamIndex = null;
+      if (state.roundNumber > 1) state.roundNumber -= 1;
     },
-    nextRound(state) {
-      state.roundNumber += 1;
-    },
+
+    /* ==== раунди ==== */
+    resetRound(state) { state.roundTurns = 0; },
+    nextRound(state)  { state.roundNumber += 1; },
+
+    /* ==== інші службові екшени ==== */
     resetGame(state) {
-      state.teams = [...defaultTeams];
-      state.scores = [...defaultScores];
-      state.words = [...defaultWords];
-      state.currentTeamIndex = 0;
-      state.currentWordIndex = 0;
-      state.roundTurns = 0;
-      state.lastRoute = null;
-      state.roundNumber = 1;
-      state.history = [];
+      const currentSet = [...state.words];
+      Object.assign(state, { ...initialState, words: shuffle(currentSet) });
     },
-    setLastRoute(state, action: PayloadAction<string | null>) {
-      state.lastRoute = action.payload;
+    setLastRoute(state, { payload }: PayloadAction<string | null>) {
+      state.lastRoute = payload;
+    },
+
+    /* прямі установки (debug / restore) */
+    setTurn(state, { payload }: PayloadAction<Turn>) {
+      state.currentTeamIndex = payload.teamIndex;
+      state.currentWordIndex = payload.wordIndex;
+    },
+    setHistory(state, { payload }: PayloadAction<Turn[]>) {
+      state.history = payload;
     },
   },
 });
 
+/* ─────────────────────────── exports ──────────────────────────── */
 export const {
-  addTeam,
-  updateTeam,
-  removeTeam,
-  endTurn,
-  goBackTurn,
-  awardPoint,
-  resetRound,
-  nextRound,
-  resetGame,
-  setLastRoute,
-  setTurn,
-  setHistory,
+  loadWords,
+  addTeam, updateTeam, removeTeam,
+  endTurn, goBackTurn,
+  awardPoint, undoLastAward,
+  resetRound, nextRound,
+  resetGame, setLastRoute,
+  setTurn, setHistory,
 } = gameSlice.actions;
 
 export default gameSlice.reducer;

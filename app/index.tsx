@@ -10,64 +10,59 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { resetGame } from "../store/gameSlice";
 
+import { useLanguage } from "./i18n/LanguageContext";
+import LanguageSwitcher from "./LanguageSwitcher";
+
 /**
- * Главный экран ("/") — с фоном и гламурным стилем
+ * Главный экран ("/") — меню игры
  */
 export default function MainMenuScreen() {
+  const { t } = useLanguage();           // 👈 переводчик
   const dispatch = useDispatch();
   const router = useRouter();
 
-  // Достаём lastRoute из Redux, чтобы показывать «Continue»
+  // lastRoute → «Continue»
   const lastRoute = useSelector((state: any) => state.game.lastRoute);
   const hasActiveGame = lastRoute !== null;
 
   const handleNewGame = () => {
-    // Сброс игры
     dispatch(resetGame());
-    // Переходим к выбору команд
     router.push("/teams");
   };
 
   const handleContinue = () => {
-    if (lastRoute) {
-      router.push(lastRoute);
-    }
+    if (lastRoute) router.push(lastRoute);
   };
 
-
-
-const handleHowToPlay = () => {
-  router.push("/how-to-play");
-};
-
-
+  const handleHowToPlay = () => router.push("/how-to-play");
 
   return (
-    // Фоновое изображение
     <ImageBackground
-      source={require("../assets/images/woman.jpg")} // <-- ваш файл
+      source={require("../assets/images/woman.jpg")}
       style={styles.background}
       resizeMode="cover"
     >
-      {/* Полупрозрачный тёмный слой поверх картинки */}
       <View style={styles.overlay}>
-        <Text style={styles.title}>Alias</Text>
+        {/* переключатель EN/UK в правом верхнем углу */}
+        <LanguageSwitcher />
+
+        <Text style={styles.title}>{t("menu.title")}</Text>
 
         {hasActiveGame && (
           <TouchableOpacity style={styles.button} onPress={handleContinue}>
-            <Text style={styles.buttonText}>Continue</Text>
+            <Text style={styles.buttonText}>{t("menu.continue")}</Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity style={styles.button} onPress={handleNewGame}>
-          <Text style={styles.buttonText}>New Game</Text>
+          <Text style={styles.buttonText}>{t("menu.newGame")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, styles.howToPlayBtn]}
           onPress={handleHowToPlay}
         >
-          <Text style={styles.buttonText}>How to play</Text>
+          <Text style={styles.buttonText}>{t("menu.howToPlay")}</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>
@@ -77,19 +72,18 @@ const handleHowToPlay = () => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    // Изображение растягивается на весь экран
     width: "100%",
     height: "100%",
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)", // тёмный прозрачный налёт
+    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
   },
   title: {
     fontSize: 40,
-    color: "#ffcccc", // светлый красный/розовый
+    color: "#ffcccc",
     fontWeight: "bold",
     marginBottom: 50,
     textShadowColor: "#000",
